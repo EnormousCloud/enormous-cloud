@@ -1,5 +1,8 @@
 FROM ekidd/rust-musl-builder:stable as builder
-RUN USER=root cargo new --bin fiatprices
+RUN USER=root cargo new --bin enormouscloud
+COPY ./client/Cargo.lock /home/rust/src/client/Cargo.lock
+COPY ./client/Cargo.toml /home/rust/src/client/Cargo.toml
+COPY ./client/src /home/rust/src/client/src
 WORKDIR /home/rust/src/enormouscloud
 COPY ./server/Cargo.lock ./Cargo.lock
 COPY ./server/Cargo.toml ./Cargo.toml
@@ -16,7 +19,7 @@ ENV TZ=Etc/UTC \
     RUST_LOG=sqlx=warn,tide=warn,ureq=warn,info
 RUN addgroup -S $APP_USER && adduser -S -g $APP_USER $APP_USER
 COPY --from=builder /home/rust/src/enormouscloud/target/x86_64-unknown-linux-musl/release/enormouscloud /usr/src/app/enormouscloud
-COPY ./client/dist /home/rust/src/enormouscloud/target/x86_64-unknown-linux-musl/release/enormouscloud /usr/src/app/enormouscloud/dist
+COPY ./client/dist /usr/src/app/dist
 RUN chown -R $APP_USER:$APP_USER /usr/src/app
 USER $APP_USER
 WORKDIR /usr/src/app
