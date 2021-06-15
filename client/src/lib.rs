@@ -13,6 +13,11 @@ pub enum Msg {
 pub struct App {
     // blockchains: Vec<Blockchain>,
 }
+impl App {
+    pub fn new() -> Self {
+        Self{}
+    }
+}
 
 impl Component<Msg> for App {
     fn view(&self) -> Node<Msg> {
