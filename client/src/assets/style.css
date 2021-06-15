@@ -99,3 +99,37 @@ h1 {
     font-size: 1.8em;
   }
 }
+
+.well {
+  background: var(--color-well);
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 5px #e4e4e9;
+  border-radius: 5px;
+}
+.well h1, .well h2, .well h3, .well h4 {
+  margin-top: 0px;
+  color: #444;
+}
+
+.network__property {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.network__item {
+  min-width: 290px;
+}
+
+@media (min-width: 640px) {
+  .network__list {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-evenly;
+    align-items: center;
+  }
+  .network__item {
+    width: auto;
+  }
+}
