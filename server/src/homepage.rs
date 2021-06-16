@@ -11,7 +11,7 @@ pub async fn get(req: Request<State>) -> Result {
     // let mut conn = db_pool.acquire().await?;
     // TODO: fetch list of blockchain form database
     // let chains = db::get_chains(&mut conn).await;
-   
+
     let content = std::fs::read_to_string(file.as_str())?;
     let app = App::new();
     let serialized_state = serde_json::to_string(&app).unwrap();

@@ -1,5 +1,6 @@
 pub mod args;
 pub mod homepage;
+pub mod telemetry;
 
 #[derive(Clone)]
 pub struct State {
@@ -14,15 +15,14 @@ use tide::{Body, Middleware, Next, Request, Response, StatusCode};
 // This is an example of middleware that keeps its own state and could
 // be provided as a third party crate
 #[derive(Default)]
-struct LogMiddleware {}
+struct ServeMiddleware {}
 
 #[tide::utils::async_trait]
-impl Middleware<State> for LogMiddleware {
+impl Middleware<State> for ServeMiddleware {
     async fn handle(&self, req: Request<State>, next: Next<'_, State>) -> tide::Result {
         let path = req.url().path().to_owned();
         let method = req.method().to_string();
 
-        println!("method={} path={}", method, path);
         if method == "GET" && path != "/" {
             let dir = PathBuf::from(req.state().static_dir.clone());
             let path = path.trim_start_matches('/');
@@ -36,16 +36,15 @@ impl Middleware<State> for LogMiddleware {
                     file_path.push(&p);
                 }
             }
-            log::info!("Requested file: {:?}", file_path);
             let file_path = async_std::path::PathBuf::from(file_path);
             if !file_path.starts_with(&dir) {
-                log::warn!("Unauthorized attempt to read: {:?}", file_path);
+                tracing::warn!("Unauthorized attempt to read: {:?}", file_path);
                 return Ok(Response::new(StatusCode::Forbidden));
             } else {
                 return match Body::from_file(&file_path).await {
                     Ok(body) => Ok(Response::builder(StatusCode::Ok).body(body).build()),
                     Err(e) if e.kind() == io::ErrorKind::NotFound => {
-                        log::warn!("File not found: {:?}", &file_path);
+                        tracing::warn!("File not found: {:?}", &file_path);
                         Ok(Response::new(StatusCode::NotFound))
                     }
                     Err(e) => Err(e.into()),
@@ -58,14 +57,16 @@ impl Middleware<State> for LogMiddleware {
 }
 
 #[async_std::main]
-async fn main() -> Result<(), anyhow::Error> {
-    env_logger::init();
+async fn main() -> tide::Result<()> {
     let args = match args::parse() {
         Ok(x) => x,
         Err(e) => {
             panic!("Args parsing error: {}", e);
         }
     };
+    tracing_subscriber::fmt()
+        .with_max_level(tracing::Level::INFO)
+        .init();
 
     let pool = sqlx::postgres::PgPoolOptions::new()
         .max_connections(args.database_conn)
@@ -85,10 +86,9 @@ async fn main() -> Result<(), anyhow::Error> {
         static_dir: args.static_dir.clone(),
     };
     let mut app = tide::with_state(state);
-    app.with(LogMiddleware {});
-
+    app.with(telemetry::TraceMiddleware::new());
+    app.with(ServeMiddleware {});
     app.at("/").get(homepage::get);
-    app.at("/*").serve_dir(args.static_dir.as_str())?;
     app.listen(args.addr.as_str()).await?;
     Ok(())
 }
