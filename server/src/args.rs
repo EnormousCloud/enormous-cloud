@@ -20,7 +20,7 @@ pub struct Args {
 
 pub fn parse() -> anyhow::Result<Args> {
     let res = Args::from_args();
-    println!("{:?}", res);
+    tracing::info!("{:?}", res);
     // todo: check static dir exists
     Ok(res)
 }

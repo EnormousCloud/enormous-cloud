@@ -1,4 +1,4 @@
-use client::proto::{NetworkInfo, NetworkPropValue, ChainStateUrl};
+use client::proto::{ChainStateUrl, NetworkInfo, NetworkPropValue};
 use sqlx::pool::PoolConnection;
 use sqlx::{postgres::PgRow, Postgres, Row};
 use std::collections::BTreeMap;
@@ -19,7 +19,7 @@ pub async fn get_links(conn: &mut PoolConnection<Postgres>) -> Vec<ChainStateUrl
     };
     let mut res = vec![];
     for row in rows {
-        res.push(ChainStateUrl{
+        res.push(ChainStateUrl {
             url: row.get("url"),
             auth_header: row.get("auth_header"),
         })
@@ -27,7 +27,9 @@ pub async fn get_links(conn: &mut PoolConnection<Postgres>) -> Vec<ChainStateUrl
     res
 }
 
-pub async fn get_properties_map(conn: &mut PoolConnection<Postgres>) -> BTreeMap<String, Vec<NetworkPropValue>> {
+pub async fn get_properties_map(
+    conn: &mut PoolConnection<Postgres>,
+) -> BTreeMap<String, Vec<NetworkPropValue>> {
     let sql = "SELECT name, label, value, link FROM networks_properties ORDER BY sortorder";
     let rows: Vec<PgRow> = match sqlx::query(sql).fetch_all(conn).await {
         Ok(x) => x,
@@ -41,9 +43,9 @@ pub async fn get_properties_map(conn: &mut PoolConnection<Postgres>) -> BTreeMap
             res.insert(name.clone(), v);
         }
         if let Some(v) = res.get_mut(name.as_str()) {
-            v.push(NetworkPropValue{
+            v.push(NetworkPropValue {
                 label: row.get("label"),
-                value:row.get("value"),
+                value: row.get("value"),
                 link: optional_str(row.get("link")),
             })
         }
@@ -80,10 +82,12 @@ pub async fn get_networks(conn: &mut PoolConnection<Postgres>) -> Vec<NetworkInf
 #[cfg(test)]
 mod test {
     use super::*;
-    use sqlx::{Postgres, pool::PoolConnection};
+    use sqlx::{pool::PoolConnection, Postgres};
 
     async fn get_test_conn() -> Result<PoolConnection<Postgres>, sqlx::Error> {
-        let pool = sqlx::postgres::PgPool::connect("postgres://postgres:password@localhost/enormous").await?;
+        let pool =
+            sqlx::postgres::PgPool::connect("postgres://postgres:password@localhost/enormous")
+                .await?;
         pool.acquire().await
     }
 

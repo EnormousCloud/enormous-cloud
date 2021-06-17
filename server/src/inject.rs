@@ -16,7 +16,7 @@ pub fn it(content: &str, start: &'static str, end: &'static str, replacement: &s
 
 pub fn replace(content: &str, start: &'static str, end: &'static str, replacement: &str) -> String {
     if let Some(start_tag) = content.find(start) {
-        let before: String = content.chars().into_iter().take(start_tag).collect();
+        let before: String = content.chars().into_iter().take(start_tag - 1).collect();
         let after_before: String = content
             .chars()
             .into_iter()
@@ -67,7 +67,7 @@ mod test {
     }
 
     #[test]
-    fn it_replaces() {
+    fn it_replaces_tag() {
         let res = replace("this does <main>bad</main>a lot", "<main>", "</main>", "");
         assert_eq!(res.as_str(), "this does a lot");
     }
