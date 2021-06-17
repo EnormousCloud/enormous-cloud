@@ -45,7 +45,10 @@ impl Middleware<State> for ServeMiddleware {
                 return Ok(Response::new(StatusCode::Forbidden));
             } else {
                 return match Body::from_file(&file_path).await {
-                    Ok(body) => Ok(Response::builder(StatusCode::Ok).body(body).build()),
+                    Ok(body) => Ok(Response::builder(StatusCode::Ok)
+                        .header("Cache-Control", "public, max-age=604800, immutable")
+                        .body(body)
+                        .build()),
                     Err(e) if e.kind() == io::ErrorKind::NotFound => {
                         tracing::warn!("File not found: {:?}", &file_path);
                         Ok(Response::new(StatusCode::NotFound))
@@ -61,15 +64,15 @@ impl Middleware<State> for ServeMiddleware {
 
 #[async_std::main]
 async fn main() -> tide::Result<()> {
+    tracing_subscriber::fmt()
+        .with_env_filter(tracing_subscriber::EnvFilter::new("sqlx=warn,info"))
+        .init();
     let args = match args::parse() {
         Ok(x) => x,
         Err(e) => {
             panic!("Args parsing error: {}", e);
         }
     };
-    tracing_subscriber::fmt()
-        .with_max_level(tracing::Level::INFO)
-        .init();
 
     let pool = sqlx::postgres::PgPoolOptions::new()
         .max_connections(args.database_conn)
