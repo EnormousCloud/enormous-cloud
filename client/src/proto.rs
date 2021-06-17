@@ -26,3 +26,11 @@ pub struct NetworkInfo {
     /// (number of daily/hourly transactions)
     pub properties: Vec<NetworkPropValue>,
 }
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct ChainStateUrl {
+    /// url where we should get chains state
+    pub url: String,
+    /// authorization header for the chains state
+    pub auth_header: String,
+}

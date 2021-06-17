@@ -1,4 +1,4 @@
-use crate::{State, inject};
+use crate::{inject, State};
 use client::App;
 use sauron::prelude::*;
 use serde_json;
@@ -15,19 +15,17 @@ pub async fn get(req: Request<State>) -> Result {
 
     let app = App::new();
     let state_json = serde_json::to_string(&app).unwrap();
-    
+
     let mut state_html = String::new();
     let content = std::fs::read_to_string(file.as_str())?;
     let rendered: String = match app.view().render(&mut state_html) {
         Ok(_) => {
             let c1 = inject::it(content.as_str(), "<main>", "</main>", &state_html);
             inject::replace(c1.as_str(), "main(`", "`)", "")
-        },
-        Err(_) => {
-            inject::it(content.as_str(), "main(`", "`)", &state_json)
-        },
+        }
+        Err(_) => inject::it(content.as_str(), "main(`", "`)", &state_json),
     };
-    
+
     res.set_content_type("text/html");
     res.set_body(rendered.as_str());
     Ok(res)

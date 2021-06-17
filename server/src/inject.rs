@@ -1,6 +1,10 @@
 pub fn it(content: &str, start: &'static str, end: &'static str, replacement: &str) -> String {
     if let Some(start_tag) = content.find(start) {
-        let before: String = content.chars().into_iter().take(start_tag + start.len()).collect();
+        let before: String = content
+            .chars()
+            .into_iter()
+            .take(start_tag + start.len())
+            .collect();
         let after_before: String = content.chars().into_iter().skip(before.len()).collect();
         if let Some(end_tag) = after_before.find(end) {
             let after: String = after_before.chars().into_iter().skip(end_tag).collect();
@@ -13,15 +17,22 @@ pub fn it(content: &str, start: &'static str, end: &'static str, replacement: &s
 pub fn replace(content: &str, start: &'static str, end: &'static str, replacement: &str) -> String {
     if let Some(start_tag) = content.find(start) {
         let before: String = content.chars().into_iter().take(start_tag).collect();
-        let after_before: String = content.chars().into_iter().skip(before.len() + start.len()).collect();
+        let after_before: String = content
+            .chars()
+            .into_iter()
+            .skip(before.len() + start.len())
+            .collect();
         if let Some(end_tag) = after_before.find(end) {
-            let after: String = after_before.chars().into_iter().skip(end_tag + end.len()).collect();
+            let after: String = after_before
+                .chars()
+                .into_iter()
+                .skip(end_tag + end.len())
+                .collect();
             return format!("{}{}{}", before, replacement, after);
         }
     }
     content.to_string()
 }
-
 
 #[cfg(test)]
 mod test {
@@ -46,7 +57,12 @@ mod test {
 
     #[test]
     fn few_params() {
-        let res = it("this can(`{}`) or should(`{}`) a lot", "can(`", "`)", "change");
+        let res = it(
+            "this can(`{}`) or should(`{}`) a lot",
+            "can(`",
+            "`)",
+            "change",
+        );
         assert_eq!(res.as_str(), "this can(`change`) or should(`{}`) a lot");
     }
 
@@ -55,5 +71,4 @@ mod test {
         let res = replace("this does <main>bad</main>a lot", "<main>", "</main>", "");
         assert_eq!(res.as_str(), "this does a lot");
     }
-
 }
