@@ -10,13 +10,13 @@ pub async fn get(req: Request<State>) -> Result {
 
     let db_pool = req.state().db_pool.clone();
     let mut conn = db_pool.acquire().await?;
-    let app = App::from(db::get_networks(&mut conn).await);
 
-    let links = db::get_networks(&mut conn).await;
+    let links = db::get_links(&mut conn).await;
     tracing::info!("links {:?}", links);
-    tracing::info!("app {:?}", &app);
 
-    // crate::chainstate::get(chains)
+    let props = crate::chainstate::remote_properties(links);
+    let app = App::from(db::get_networks(&mut conn, Some(props)).await);
+    tracing::info!("app {:?}", &app);
     let state_json = serde_json::to_string(&app).unwrap();
 
     let mut state_html = String::new();

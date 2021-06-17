@@ -53,7 +53,7 @@ pub async fn get_properties_map(
     res
 }
 
-pub async fn get_networks(conn: &mut PoolConnection<Postgres>) -> Vec<NetworkInfo> {
+pub async fn get_networks(conn: &mut PoolConnection<Postgres>, props: Option<BTreeMap<String, NetworkInfo>>) -> Vec<NetworkInfo> {
     let by_network = get_properties_map(conn).await;
     let sql = "SELECT name, coin, test, link FROM networks_list WHERE active=true";
     let rows: Vec<PgRow> = match sqlx::query(sql).fetch_all(conn).await {
@@ -63,10 +63,18 @@ pub async fn get_networks(conn: &mut PoolConnection<Postgres>) -> Vec<NetworkInf
     let mut res = vec![];
     for row in rows {
         let name: String = row.get("name");
-        let properties: Vec<NetworkPropValue> = match by_network.get(name.as_str()) {
+        let mut properties: Vec<NetworkPropValue> = match by_network.get(name.as_str()) {
             Some(x) => x.to_vec(),
             None => vec![],
         };
+        if let Some(pmap) = &props { // if props are provided
+            if let Some(netinfo) = pmap.get(name.as_str())  { // and we have network listed
+                for v in netinfo.properties.iter() {
+                    properties.push(v.clone());
+                }
+            }
+        }
+        
         res.push(NetworkInfo {
             name: name.clone(),
             link: optional_str(row.get("link")),
@@ -103,7 +111,7 @@ mod test {
     #[async_std::test]
     async fn it_retrieves_props() -> std::io::Result<()> {
         let mut conn = get_test_conn().await.unwrap();
-        eprintln!("networks: {:?}", get_networks(&mut conn).await);
+        eprintln!("networks: {:?}", get_networks(&mut conn, None).await);
         Ok(())
     }
 }

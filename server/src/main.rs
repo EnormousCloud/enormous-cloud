@@ -1,5 +1,5 @@
 pub mod args;
-// pub mod chainstate;
+pub mod chainstate;
 pub mod db;
 pub mod homepage;
 pub mod inject;

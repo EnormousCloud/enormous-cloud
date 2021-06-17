@@ -804,6 +804,7 @@ dependencies = [
  "client",
  "sauron",
  "serde",
+ "serde_json",
  "sqlx",
  "structopt",
  "tide",
